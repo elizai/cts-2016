@@ -1,24 +1,27 @@
 package ro.ase.cts;
 
-public class ContDebit 
-	extends ContBancar implements Profitabil{
+public class ContCredit extends ContBancar{
+
+	private static final double CREDIT_MAXIM = 5000;
+	private double creditInitial;
 	
-	public static final double VALOARE_MINIMA = 100.0;
-	
-	public ContDebit(String iban){
+	public ContCredit(String iban, 
+			double valoareCredit) throws Exception {
 		super(iban);
-		this.balanta = VALOARE_MINIMA;
+		if(valoareCredit > CREDIT_MAXIM)
+			throw new Exception("Credit prea mare");
+		
+		this.creditInitial = valoareCredit;
 	}
 
 	@Override
 	public void Depune(double suma) {
-		this.balanta += suma;
+		this.balanta+=suma;
 	}
 
 	@Override
-	public void Extrage(double suma) 
-			throws Exception {
-		if(this.balanta-suma < VALOARE_MINIMA)
+	public void Extrage(double suma) throws ExceptieFonduriInsuficiente, Exception {
+		if(this.balanta-suma < 0)
 			throw new ExceptieFonduriInsuficiente("");
 		
 		if(suma <= 0)
@@ -32,13 +35,15 @@ public class ContDebit
 	}
 
 	@Override
-	public void Transfer(Cont destinatie, 
-			double suma) throws Exception {
+	public void Transfer(Cont destinatie, double suma) throws ExceptieTransferIlegal, Exception {
 		if(destinatie instanceof ContBancar){
 			ContBancar contDestinatie = 
 					(ContBancar) destinatie;
 			if(this.getIBAN().equals(
 					contDestinatie.getIBAN()))
+				throw new ExceptieTransferIlegal("");
+			
+			if(destinatie instanceof ContCredit)
 				throw new ExceptieTransferIlegal("");
 		}
 		else
@@ -48,12 +53,4 @@ public class ContDebit
 		destinatie.Depune(suma);
 	}
 
-	@Override
-	public void adaugaDobanda(double dobanda) throws Exception {
-		if(dobanda > 0 && dobanda <= 1){
-			this.balanta *= (1+dobanda);
-		}
-		else
-			throw new Exception("Dobanda gresita");
-	}
 }
